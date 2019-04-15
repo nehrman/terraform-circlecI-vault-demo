@@ -1,4 +1,3 @@
-
 {
   "datacenter": "ukwest",
   "acl_datacenter": "ukwest",
@@ -10,12 +9,12 @@
   "bootstrap_expect": 3,
   "bind_addr": "0.0.0.0",
   "node_name": "demostack-windows-0",
-  "ddata_dir": "C:\HashiCorp\Consul\data",
+  "d"data_dir": "C:\\HashiCorp\\Consul\\data",
   "encrypt": "MDdkYzNhODFhZTQ5OWVjY2ZkYzNkNWEwMzFkNjA2NmQ=",
   "disable_update_check": true,
   "leave_on_terminate": true,
   "raft_protocol": 3,
-  "retry_join": ["provider=azure tag_name=demostack  tag_value=demostack-bb4cbc8bab1cefe531097c09481b798d tenant_id=0e3e2e88-8caf-41ca-b4da-e3b33b6c52ec client_id=3b0bf866-d5c3-4134-976b-615dd6b8d4a5 subscription_id=8708baf2-0a54-4bb4-905b-78d21ac150da secret_access_key=61682315-a5a6-4b6e-a31f-98bde6d07e9c"],
+  "retry_join": ["provider=azure tag_name=demostack  tag_value=demostack-bb4cbc8                   bab1cefe531097c09481b798d tenant_id=0e3e2e88-8caf-41ca-b4da-e3b33b6c52ec client_                   id=3b0bf866-d5c3-4134-976b-615dd6b8d4a5 subscription_id=8708baf2-0a54-4bb4-905b-                   78d21ac150da secret_access_key=61682315-a5a6-4b6e-a31f-98bde6d07e9c "],
 
   "server": true,
   "addresses": {
@@ -26,6 +25,9 @@
     "http": 8500,
     "https": 8533
   },
+  "key_file": "/etc/ssl/certs/me.key",
+  "cert_file": "/etc/ssl/certs/me.crt",
+  "ca_file": "/usr/local/share/ca-certificates/01-me.crt",
   "verify_incoming": false,
   "verify_outgoing": false,
   "verify_server_hostname": false,

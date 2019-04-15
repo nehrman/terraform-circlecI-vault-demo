@@ -180,59 +180,6 @@ resource "azurerm_public_ip" "ptfe-pip" {
   domain_name_label            = "${var.hostname}"
 }
 
-/*
-resource "azurerm_virtual_machine" "ptfe" {
-  name                = "${var.hostname}-ptfe"
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.ptfe.name}"
-  vm_size             = "${var.vm_size}"
-
-  network_interface_ids         = ["${azurerm_network_interface.ptfe-nic.id}"]
-  delete_os_disk_on_termination = "true"
-
-  storage_image_reference {
-    publisher = "${var.image_publisher}"
-    offer     = "${var.image_offer}"
-    sku       = "${var.image_sku}"
-    version   = "${var.image_version}"
-  }
-
-  storage_os_disk {
-    name              = "${var.hostname}-osdisk"
-    managed_disk_type = "Standard_LRS"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    disk_size_gb      = "${var.storage_disk_size}"
-  }
-
-  os_profile {
-    computer_name  = "${var.hostname}"
-    admin_username = "${var.admin_username}"
-    admin_password = "${var.admin_password}"
-  }
-
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
-
-  # This shell script starts a ptfe install
-  provisioner "remote-exec" {
-    inline = [
-      "curl https://install.terraform.io/ptfe/stable > install_ptfe.sh",
-      "chmod 500 install_ptfe.sh",
-      "sudo ./install_ptfe.sh no-proxy bypass-storagedriver-warnings ",
-    ]
-
-    connection {
-      type     = "ssh"
-      user     = "${var.admin_username}"
-      password = "${var.admin_password}"
-      host     = "${azurerm_public_ip.ptfe-pip.fqdn}"
-    }
-  }
-  }
-*/
-  
 
 resource "azurerm_virtual_machine" "web_server" {
   name                  = "demostack-windows-0"
@@ -248,7 +195,8 @@ network_interface_ids         = ["${azurerm_network_interface.ptfe-nic.id}"]
   storage_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
-    sku       = "2016-Datacenter-Server-Core-smalldisk"
+    sku       = "2016-Datacenter"
+    // sku       = "2016-Datacenter-Server-Core-smalldisk"
     version   = "latest"
   }
 
@@ -259,10 +207,18 @@ network_interface_ids         = ["${azurerm_network_interface.ptfe-nic.id}"]
     managed_disk_type = "Standard_LRS"
   }
 
+tags {
+    name      = "Guy Barros"
+    ttl       = "13"
+    owner     = "guy@hashicorp.com"
+
+  }
+
   os_profile {
     computer_name      = "windows-0"
     admin_username     = "${var.admin_username}"
     admin_password     = "${var.admin_password}"
+    
     custom_data        =   <<EOF
 <powershell>
 net user ${var.admin_username} '${var.admin_password}' /add /y
@@ -274,14 +230,15 @@ winrm set winrm/config '@{MaxTimeoutms="1800000"}'
 winrm set winrm/config/service '@{AllowUnencrypted="true"}'
 winrm set winrm/config/service/auth '@{Basic="true"}'
 
-netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
-netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+
 
 net stop winrm
 sc.exe config winrm start=auto
 net start winrm
+
 </powershell>
 EOF
+
   
   }
 
@@ -293,15 +250,15 @@ EOF
       protocol = "http"  
     } 
 
-// template = "${file("${path.module}/scripts/consul.tpl")}"
+
     additional_unattend_config {
             pass = "oobeSystem"
             component = "Microsoft-Windows-Shell-Setup"
             setting_name = "AutoLogon"
             content = "<AutoLogon><Password><Value>${var.admin_password}</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>${var.admin_username}</Username></AutoLogon>"
         }
-        
-        #Unattend config is to enable basic auth in WinRM, required for the provisioner stage.
+
+         #Unattend config is to enable basic auth in WinRM, required for the provisioner stage.
         additional_unattend_config {
             pass = "oobeSystem"
             component = "Microsoft-Windows-Shell-Setup"
@@ -309,12 +266,12 @@ EOF
             content = "${file("${path.module}/scripts/FirstLogonCommands.xml")}"
         }
 
-
-  }  
+        
+   }  
 
  provisioner "file" {
-    source      = "${path.module}/scripts/InstallHashicorp.bat"
-    destination = "C:\\Hashicorp\\InstallHashicorp.bat"
+    source      = "${path.module}/scripts/InstallHashicorp.ps1"
+    destination = "C:\\Hashicorp\\InstallHashicorp.ps1"
   
   connection {
        type = "winrm"

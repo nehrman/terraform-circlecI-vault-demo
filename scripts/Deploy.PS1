@@ -22,5 +22,9 @@ winrm set winrm/config/service/Auth $WinRmBasic
 
 Write-Host "Open Firewall Port"
 netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=$WinRmPort
+netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+
+set-netfirewallprofile -Profile Domain, Public,Private -enable false
 
 Stop-Transcript
