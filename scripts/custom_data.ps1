@@ -1,17 +1,29 @@
-<powershell>
-net user ${var.admin_username} '${var.admin_password}' /add /y
-net localgroup administrators ${var.admin_username} /add
 
-winrm quickconfig -q
-winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="300"}'
-winrm set winrm/config '@{MaxTimeoutms="1800000"}'
-winrm set winrm/config/service '@{AllowUnencrypted="true"}'
-winrm set winrm/config/service/auth '@{Basic="true"}'
+Start-Transcript -Path C:\Deploy.Log
 
-set-netfirewallprofile -Profile Domain, Public,Private -Enabled false
+Write-Host "Setup WinRM for $RemoteHostName"
 
-net stop winrm
-sc.exe config winrm start=auto
-net start winrm
+$Cert = New-SelfSignedCertificate -DnsName $RemoteHostName, $ComputerName `
+    -CertStoreLocation "cert:\LocalMachine\My" `
+    -FriendlyName "Test WinRM Cert"
 
-</powershell>
+$Cert | Out-String
+
+$Thumbprint = $Cert.Thumbprint
+
+Write-Host "Enable HTTPS in WinRM"
+$WinRmHttps = "@{Hostname=`"$RemoteHostName`"; CertificateThumbprint=`"$Thumbprint`"}"
+winrm create winrm/config/Listener?Address=*+Transport=HTTPS $WinRmHttps
+
+Write-Host "Set Basic Auth in WinRM"
+$WinRmBasic = "@{Basic=`"true`"}"
+winrm set winrm/config/service/Auth $WinRmBasic
+
+Write-Host "Open Firewall Port"
+netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=$WinRmPort
+netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+
+set-netfirewallprofile -Profile Domain, Public,Private -enable false
+
+Stop-Transcript

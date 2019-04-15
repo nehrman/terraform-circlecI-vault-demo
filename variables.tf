@@ -13,7 +13,7 @@ variable "resource_group" {
 
 variable "demo_prefix" {
   description = "This prefix will be included in the name of some resources."
-  default     = "avsdemo"
+  default     = "winmad"
 }
 
 variable "hostname" {

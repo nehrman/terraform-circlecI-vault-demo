@@ -12,9 +12,9 @@ output "Next Steps" {
   value = <<SHELLCOMMANDS
 
 ##############################################################################
-# Azure PTFE install
-# Continue the PTFE install from:
-http://${azurerm_public_ip.ptfe-pip.fqdn}:8800
+# Azure windows install
+# Continue the windows install from:
+http://${azurerm_public_ip.windows-pip.fqdn}:8800
 SHELLCOMMANDS
 }
 

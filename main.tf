@@ -1,73 +1,47 @@
+data "template_file" "windows" {
+template = "${file("${path.module}/scripts/custom_data.ps1")}"
+
+  vars {
+    admin_username = "${var.admin_username}"
+    admin_password = "${var.admin_password}"
+    
+  }
+
+  }
+
+
+
 data "template_file" "consulconfig" {
    template = "${file("${path.module}/scripts/consul.tpl")}"
 
 }
 
-##############################################################################
-# HashiCorp PTFE instlation Demo
-# 
-# This Terraform configuration will create the following:
-#
-# * Resource group with a virtual network and subnet
-# * A HashiCorp ptfe server
-# *
-##############################################################################
-# Shared infrastructure resources
-
-# First we'll create a resource group. In Azure every resource belongs to a 
-# resource group. Think of it as a container to hold all your resources. 
-# You can find a complete list of Azure resources supported by Terraform here:
-# https://www.terraform.io/docs/providers/azurerm/
-#this change doesnt do anything
-resource "azurerm_resource_group" "ptfe" {
+resource "azurerm_resource_group" "windows" {
   name     = "${var.resource_group}"
   location = "${var.location}"
 }
 
-# The next resource is a Virtual Network. We can dynamically place it into the
-# resource group without knowing its name ahead of time. Terraform handles all
-# of that for you, so everything is named consistently every time. Say goodbye
-# to weirdly-named mystery resources in your Azure Portal. To see how all this
-# works visually, run `terraform graph` and copy the output into the online
-# GraphViz tool: http://www.webgraphviz.com/
 resource "azurerm_virtual_network" "vnet" {
   name                = "${var.virtual_network_name}"
-  location            = "${azurerm_resource_group.ptfe.location}"
+  location            = "${azurerm_resource_group.windows.location}"
   address_space       = ["${var.address_space}"]
-  resource_group_name = "${azurerm_resource_group.ptfe.name}"
+  resource_group_name = "${azurerm_resource_group.windows.name}"
 }
 
-# Next we'll build a subnet to run our VMs in. These variables can be defined 
-# via environment variables, a config file, or command line flags. Default 
-# values will be used if the user does not override them. You can find all the
-# default variables in the variables.tf file. You can customize this demo by
-# making a copy of the terraform.tfvars.example file.
 resource "azurerm_subnet" "subnet" {
   name                 = "${var.demo_prefix}subnet"
   virtual_network_name = "${azurerm_virtual_network.vnet.name}"
-  resource_group_name  = "${azurerm_resource_group.ptfe.name}"
+  resource_group_name  = "${azurerm_resource_group.windows.name}"
   address_prefix       = "${var.subnet_prefix}"
 }
-
-##############################################################################
-# HashiCorp ptfe Server
-#
-# Now that we have a network, we'll deploy a stand-alone HashiCorp ptfe 
-# server.
-
-# An Azure Virtual Machine has several components. In this example we'll build
-# a security group, a network interface, a public ip address, a storage 
-# account and finally the VM itself. Terraform handles all the dependencies 
-# automatically, and each resource is named with user-defined variables.
-
 # Security group to allow inbound access on port 8200,443,80,22 and 9870-9880
-resource "azurerm_network_security_group" "ptfe-sg" {
+resource "azurerm_network_security_group" "windows-sg" {
   name                = "${var.demo_prefix}-sg"
   location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.ptfe.name}"
+  resource_group_name = "${azurerm_resource_group.windows.name}"
 
   security_rule {
-    name                       = "ptfe-https"
+    name                       = "windows-https"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
@@ -79,7 +53,7 @@ resource "azurerm_network_security_group" "ptfe-sg" {
   }
 
   security_rule {
-    name                       = "ptfe-setup"
+    name                       = "windows-setup"
     priority                   = 101
     direction                  = "Inbound"
     access                     = "Allow"
@@ -115,7 +89,7 @@ resource "azurerm_network_security_group" "ptfe-sg" {
   }
 
   security_rule {
-    name                       = "ptfe-run"
+    name                       = "windows-run"
     priority                   = 104
     direction                  = "Inbound"
     access                     = "Allow"
@@ -154,41 +128,41 @@ resource "azurerm_network_security_group" "ptfe-sg" {
 
 # A network interface. This is required by the azurerm_virtual_machine 
 # resource. Terraform will let you know if you're missing a dependency.
-resource "azurerm_network_interface" "ptfe-nic" {
-  name                = "${var.demo_prefix}ptfe-nic"
+resource "azurerm_network_interface" "windows-nic" {
+  name                = "${var.demo_prefix}windows-nic"
   location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.ptfe.name}"
+  resource_group_name = "${azurerm_resource_group.windows.name}"
 
-  # network_security_group_id = "${azurerm_network_security_group.ptfe-sg.id}"
+  # network_security_group_id = "${azurerm_network_security_group.windows-sg.id}"
 
   ip_configuration {
     name                          = "${var.demo_prefix}ipconfig"
     subnet_id                     = "${azurerm_subnet.subnet.id}"
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = "${azurerm_public_ip.ptfe-pip.id}"
+    public_ip_address_id          = "${azurerm_public_ip.windows-pip.id}"
   }
 }
 
 # Every Azure Virtual Machine comes with a private IP address. You can also 
 # optionally add a public IP address for Internet-facing applications and 
 # demo environments like this one.
-resource "azurerm_public_ip" "ptfe-pip" {
+resource "azurerm_public_ip" "windows-pip" {
   name                         = "${var.demo_prefix}-ip"
   location                     = "${var.location}"
-  resource_group_name          = "${azurerm_resource_group.ptfe.name}"
+  resource_group_name          = "${azurerm_resource_group.windows.name}"
   allocation_method            = "Dynamic"
   domain_name_label            = "${var.hostname}"
 }
 
 
-resource "azurerm_virtual_machine" "web_server" {
+resource "azurerm_virtual_machine" "windows" {
   name                  = "demostack-windows-0"
   location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.ptfe.name}"
+  resource_group_name = "${azurerm_resource_group.windows.name}"
   network_interface_ids = []
   vm_size               = "Standard_B2s"
 
-network_interface_ids         = ["${azurerm_network_interface.ptfe-nic.id}"]
+network_interface_ids         = ["${azurerm_network_interface.windows-nic.id}"]
   delete_os_disk_on_termination = "true"
 
 
@@ -209,7 +183,7 @@ network_interface_ids         = ["${azurerm_network_interface.ptfe-nic.id}"]
 
 tags {
     name      = "Guy Barros"
-    ttl       = "13"
+    ttl       = "24"
     owner     = "guy@hashicorp.com"
 
   }
@@ -218,12 +192,19 @@ tags {
     computer_name      = "windows-0"
     admin_username     = "${var.admin_username}"
     admin_password     = "${var.admin_password}"
-    
-    custom_data        =   <<EOF
-<powershell>
+
+
+  custom_data   =  <<EOF
+
+  
+Start-Transcript -Path C:\Deploy.Log
+
+Write-Host "Setup WinRM for $RemoteHostName"
 net user ${var.admin_username} '${var.admin_password}' /add /y
 net localgroup administrators ${var.admin_username} /add
 
+
+Write-Host "quickconfigure  WinRM"
 winrm quickconfig -q
 winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="300"}'
 winrm set winrm/config '@{MaxTimeoutms="1800000"}'
@@ -231,15 +212,29 @@ winrm set winrm/config/service '@{AllowUnencrypted="true"}'
 winrm set winrm/config/service/auth '@{Basic="true"}'
 
 
+Write-Host "Open Firewall Port for WinRM"
+netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=$WinRmPort
+netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+Write-Host "Open Firewall Port for Consul"
+netsh advfirewall firewall add rule name="Consul TCP" dir=in action=allow protocol=TCP localport=8000-9000
+netsh advfirewall firewall add rule name="Consul UDP" dir=in action=allow protocol=UDP localport=8000-9000
+Write-Host "Open Firewall Port for Nomad"
+netsh advfirewall firewall add rule name="Nomad TCP" dir=in action=allow protocol=TCP localport=4000-5000
+netsh advfirewall firewall add rule name="Nomad UDP" dir=in action=allow protocol=UDP localport=4000-5000
 
+
+set-netfirewallprofile -Profile Domain, Public,Private -Enabled false
+
+Write-Host "configure WinRM as a Service"
 net stop winrm
 sc.exe config winrm start=auto
 net start winrm
 
-</powershell>
+Stop-Transcript
+
 EOF
 
-  
   }
 
    os_profile_windows_config {  //Here defined autoupdate config and also vm agent config
@@ -279,7 +274,7 @@ EOF
             insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${azurerm_public_ip.ptfe-pip.fqdn}"
+      host     = "${azurerm_public_ip.windows-pip.fqdn}"
     }
    
 
@@ -296,7 +291,7 @@ EOF
             insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${azurerm_public_ip.ptfe-pip.fqdn}"
+      host     = "${azurerm_public_ip.windows-pip.fqdn}"
     }
   }
   
