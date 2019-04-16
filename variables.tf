@@ -5,30 +5,29 @@
 # Terraform code. If you create a variable with no default, the user will be
 # prompted to enter it (or define it via config file or command line flags.)
 
-
 variable "resource_group" {
   description = "The name of your Azure Resource Group."
-  default     = "Azure-Vault-GUY-Demo"
+  default     = "Azure-Vault-Neh-Demo"
 }
 
 variable "demo_prefix" {
   description = "This prefix will be included in the name of some resources."
-  default     = "winmad"
+  default     = "avsdemo"
 }
 
 variable "hostname" {
   description = "VM hostname. Used for local hostname, DNS, and storage-related names."
-  default     = "azurevaultsql"
+  default     = "neh-test"
 }
 
 variable "location" {
   description = "The region where the virtual network is created."
-  default     = "ukwest"
+  default     = "francecentral"
 }
 
 variable "virtual_network_name" {
   description = "The name for your virtual network."
-  default     = "vnet"
+  default     = "vnet-neh"
 }
 
 variable "address_space" {
@@ -83,10 +82,20 @@ variable "image_version" {
 
 variable "admin_username" {
   description = "Administrator user name"
-  default     = "admin"
+  default     = "nicolas"
 }
 
 variable "admin_password" {
   description = "Administrator password"
-  default     = "replace-with-your-password"
+  default     = "P4sswOrd"
+}
+
+variable "servers" {
+  description = "Number of servers to deploy"
+  default = 2
+}
+
+variable "workers" {
+  description = "Number of workers to deploy"
+  default = 2
 }

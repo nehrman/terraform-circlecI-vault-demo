@@ -8,17 +8,6 @@
 # providing instructions to the user on how to connect to their own custom 
 # demo environment.
 
-output "Next Steps" {
-  value = <<SHELLCOMMANDS
-
-##############################################################################
-# Azure windows install
-# Continue the windows install from:
-http://${azurerm_public_ip.windows-pip.fqdn}:8800
-SHELLCOMMANDS
-}
-
-
-output "file"{
-value = "${data.template_file.consulconfig.rendered}"
+output "file" {
+  value = "${data.template_file.consulconfig.rendered}"
 }

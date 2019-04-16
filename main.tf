@@ -1,101 +1,67 @@
-data "template_file" "windows" {
-template = "${file("${path.module}/scripts/custom_data.ps1")}"
-
-  vars {
-    admin_username = "${var.admin_username}"
-    admin_password = "${var.admin_password}"
-    
-  }
-
-  }
-
-
-
-data "template_file" "consulconfig" {
-   template = "${file("${path.module}/scripts/consul.tpl")}"
-
+module "rootcertificate" {
+  source                = "github.com/GuyBarros/terraform-tls-certificate"
+  version               = "0.0.1"
+  algorithm             = "ECDSA"
+  ecdsa_curve           = "P521"
+  common_name           = "service.consul"
+  organization          = "service.consul"
+  validity_period_hours = 720
+  is_ca_certificate     = true
 }
 
-resource "azurerm_resource_group" "windows" {
+data "template_file" "consulconfig" {
+  template = "${file("${path.module}/scripts/consul.tpl")}"
+}
+
+data "template_file" "nomadconfig" {
+  template = "${file("${path.module}/scripts/nomad.tpl")}"
+}
+
+resource "azurerm_resource_group" "windows-rg" {
   name     = "${var.resource_group}"
   location = "${var.location}"
 }
 
-resource "azurerm_virtual_network" "vnet" {
+resource "azurerm_virtual_network" "windows-vnet" {
   name                = "${var.virtual_network_name}"
-  location            = "${azurerm_resource_group.windows.location}"
+  location            = "${azurerm_resource_group.windows-rg.location}"
   address_space       = ["${var.address_space}"]
-  resource_group_name = "${azurerm_resource_group.windows.name}"
+  resource_group_name = "${azurerm_resource_group.windows-rg.name}"
 }
 
-resource "azurerm_subnet" "subnet" {
+resource "azurerm_subnet" "windows-subnet" {
   name                 = "${var.demo_prefix}subnet"
-  virtual_network_name = "${azurerm_virtual_network.vnet.name}"
-  resource_group_name  = "${azurerm_resource_group.windows.name}"
+  virtual_network_name = "${azurerm_virtual_network.windows-vnet.name}"
+  resource_group_name  = "${azurerm_resource_group.windows-rg.name}"
   address_prefix       = "${var.subnet_prefix}"
 }
-# Security group to allow inbound access on port 8200,443,80,22 and 9870-9880
+
 resource "azurerm_network_security_group" "windows-sg" {
   name                = "${var.demo_prefix}-sg"
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.windows.name}"
+  location            = "${azurerm_resource_group.windows-rg.location}"
+  resource_group_name = "${azurerm_resource_group.windows-rg.name}"
 
   security_rule {
-    name                       = "windows-https"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "443"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "windows-setup"
-    priority                   = 101
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "8800"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "SSH"
-    priority                   = 102
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "HTTP"
+    name                       = "winrm"
     priority                   = 103
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "80"
+    destination_port_range     = "5985"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
+
   security_rule {
-    name                       = "windows-run"
+    name                       = "rdp"
     priority                   = 104
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "9870-9880"
+    destination_port_range     = "3389"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
@@ -112,7 +78,6 @@ resource "azurerm_network_security_group" "windows-sg" {
     destination_address_prefix = "*"
   }
 
-  
   security_rule {
     name                       = "Nomad-run"
     priority                   = 106
@@ -129,17 +94,18 @@ resource "azurerm_network_security_group" "windows-sg" {
 # A network interface. This is required by the azurerm_virtual_machine 
 # resource. Terraform will let you know if you're missing a dependency.
 resource "azurerm_network_interface" "windows-nic" {
-  name                = "${var.demo_prefix}windows-nic"
+  count               = "${var.servers}"
+  name                = "${var.demo_prefix}windows-nic-${count.index}"
   location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.windows.name}"
+  resource_group_name = "${azurerm_resource_group.windows-rg.name}"
 
-  # network_security_group_id = "${azurerm_network_security_group.windows-sg.id}"
+  # network_security_group_id = "${azurerm_network_security_group.ptfe-sg.id}"
 
   ip_configuration {
-    name                          = "${var.demo_prefix}ipconfig"
-    subnet_id                     = "${azurerm_subnet.subnet.id}"
+    name                          = "${var.demo_prefix}ipconfig-${count.index}"
+    subnet_id                     = "${azurerm_subnet.windows-subnet.id}"
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = "${azurerm_public_ip.windows-pip.id}"
+    public_ip_address_id          = "${element(azurerm_public_ip.windows-pip.*.id, count.index)}"
   }
 }
 
@@ -147,155 +113,185 @@ resource "azurerm_network_interface" "windows-nic" {
 # optionally add a public IP address for Internet-facing applications and 
 # demo environments like this one.
 resource "azurerm_public_ip" "windows-pip" {
-  name                         = "${var.demo_prefix}-ip"
-  location                     = "${var.location}"
-  resource_group_name          = "${azurerm_resource_group.windows.name}"
-  allocation_method            = "Dynamic"
-  domain_name_label            = "${var.hostname}"
+  count               = "${var.servers}"
+  name                = "${var.demo_prefix}-ip-${count.index}"
+  location            = "${azurerm_resource_group.windows-rg.location}"
+  resource_group_name = "${azurerm_resource_group.windows-rg.name}"
+  allocation_method   = "Dynamic"
+  domain_name_label   = "${var.hostname}-${count.index}"
 }
 
-
-resource "azurerm_virtual_machine" "windows" {
-  name                  = "demostack-windows-0"
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.windows.name}"
+resource "azurerm_virtual_machine" "web_server" {
+  count                 = "${var.servers}"
+  name                  = "${var.hostname}-${count.index}"
+  location              = "${azurerm_resource_group.windows-rg.location}"
+  resource_group_name   = "${azurerm_resource_group.windows-rg.name}"
   network_interface_ids = []
-  vm_size               = "Standard_B2s"
+  vm_size               = "Standard_D2s_v3"
 
-network_interface_ids         = ["${azurerm_network_interface.windows-nic.id}"]
+  network_interface_ids         = ["${element(azurerm_network_interface.windows-nic.*.id, count.index)}"]
   delete_os_disk_on_termination = "true"
-
 
   storage_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
     sku       = "2016-Datacenter"
+
     // sku       = "2016-Datacenter-Server-Core-smalldisk"
-    version   = "latest"
+    version = "latest"
   }
 
   storage_os_disk {
-    name              = "server-os"
+    name              = "server-os-${count.index}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
 
-tags {
-    name      = "Guy Barros"
-    ttl       = "24"
-    owner     = "guy@hashicorp.com"
-
+  tags {
+    name  = "Nicolas Ehrman"
+    ttl   = "13"
+    owner = "nehrman@hashicorp.com"
   }
 
   os_profile {
-    computer_name      = "windows-0"
-    admin_username     = "${var.admin_username}"
-    admin_password     = "${var.admin_password}"
-
-
-  custom_data   =  <<EOF
-
-  
-Start-Transcript -Path C:\Deploy.Log
-
-Write-Host "Setup WinRM for $RemoteHostName"
-net user ${var.admin_username} '${var.admin_password}' /add /y
-net localgroup administrators ${var.admin_username} /add
-
-
-Write-Host "quickconfigure  WinRM"
-winrm quickconfig -q
-winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="300"}'
-winrm set winrm/config '@{MaxTimeoutms="1800000"}'
-winrm set winrm/config/service '@{AllowUnencrypted="true"}'
-winrm set winrm/config/service/auth '@{Basic="true"}'
-
-
-Write-Host "Open Firewall Port for WinRM"
-netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=$WinRmPort
-netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
-netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
-Write-Host "Open Firewall Port for Consul"
-netsh advfirewall firewall add rule name="Consul TCP" dir=in action=allow protocol=TCP localport=8000-9000
-netsh advfirewall firewall add rule name="Consul UDP" dir=in action=allow protocol=UDP localport=8000-9000
-Write-Host "Open Firewall Port for Nomad"
-netsh advfirewall firewall add rule name="Nomad TCP" dir=in action=allow protocol=TCP localport=4000-5000
-netsh advfirewall firewall add rule name="Nomad UDP" dir=in action=allow protocol=UDP localport=4000-5000
-
-
-set-netfirewallprofile -Profile Domain, Public,Private -Enabled false
-
-Write-Host "configure WinRM as a Service"
-net stop winrm
-sc.exe config winrm start=auto
-net start winrm
-
-Stop-Transcript
-
-EOF
-
+    computer_name  = "${var.hostname}-${count.index}"
+    admin_username = "${var.admin_username}"
+    admin_password = "${var.admin_password}"
   }
 
-   os_profile_windows_config {  //Here defined autoupdate config and also vm agent config
-    enable_automatic_upgrades = true  
-    provision_vm_agent        = true  
-  
-    winrm = {  //Here defined WinRM connectivity config
-      protocol = "http"  
-    } 
+  os_profile_windows_config {
+    enable_automatic_upgrades = true //Here defined autoupdate config and also vm agent config
+    provision_vm_agent        = true
 
+    winrm = {
+      protocol = "http" //Here defined WinRM connectivity config
+    }
 
     additional_unattend_config {
-            pass = "oobeSystem"
-            component = "Microsoft-Windows-Shell-Setup"
-            setting_name = "AutoLogon"
-            content = "<AutoLogon><Password><Value>${var.admin_password}</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>${var.admin_username}</Username></AutoLogon>"
-        }
+      pass         = "oobeSystem"
+      component    = "Microsoft-Windows-Shell-Setup"
+      setting_name = "AutoLogon"
+      content      = "<AutoLogon><Password><Value>${var.admin_password}</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>${var.admin_username}</Username></AutoLogon>"
+    }
 
-         #Unattend config is to enable basic auth in WinRM, required for the provisioner stage.
-        additional_unattend_config {
-            pass = "oobeSystem"
-            component = "Microsoft-Windows-Shell-Setup"
-            setting_name = "FirstLogonCommands"
-            content = "${file("${path.module}/scripts/FirstLogonCommands.xml")}"
-        }
+    additional_unattend_config {
+      pass         = "oobeSystem"
+      component    = "Microsoft-Windows-Shell-Setup"
+      setting_name = "FirstLogonCommands"
+      content      = "${file("${path.module}/scripts/FirstLogonCommands.xml")}"
+    }
+  }
 
-        
-   }  
-
- provisioner "file" {
+  /*provisioner "file" {
     source      = "${path.module}/scripts/InstallHashicorp.ps1"
     destination = "C:\\Hashicorp\\InstallHashicorp.ps1"
-  
-  connection {
-       type = "winrm"
-            https = false
-            insecure = true
+
+    connection {
+      type     = "winrm"
+      timeout  = "10m"
+      https    = false
+      insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${azurerm_public_ip.windows-pip.fqdn}"
+      host     = "${element(azurerm_public_ip.winmad-pip.*.ip_address, count.index)}"
     }
-   
-
   }
+  */
 
-   provisioner "file" {
-    content       = "${data.template_file.consulconfig.rendered}"
+  provisioner "file" {
+    content     = "${data.template_file.consulconfig.rendered}"
     destination = "C:\\Hashicorp\\Consul\\config.json"
-  
-  
-  connection {
-       type = "winrm"
-            https = false
-            insecure = true
+
+    connection {
+      type     = "winrm"
+      timeout  = "10m"
+      https    = false
+      insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${azurerm_public_ip.windows-pip.fqdn}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
     }
   }
-  
 
+  provisioner "file" {
+    content     = "${data.template_file.nomadconfig.rendered}"
+    destination = "C:\\Hashicorp\\Nomad\\config.json"
 
+    connection {
+      type     = "winrm"
+      timeout  = "10m"
+      https    = false
+      insecure = true
+      user     = "${var.admin_username}"
+      password = "${var.admin_password}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
+    }
+  }
+
+  # tls key
+  provisioner "file" {
+    content     = "${element(tls_private_key.servers.*.private_key_pem, count.index)}"
+    destination = "C:\\Hashicorp\\Consul\\me.key"
+
+    connection {
+      type     = "winrm"
+      https    = false
+      insecure = true
+      user     = "${var.admin_username}"
+      password = "${var.admin_password}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
+      # host     = "${element(azurerm_public_ip.winmad-pip.*.fqdn, count.index)}"
+    }
+  }
+
+# tls crt
+  provisioner "file" {
+    content     = "${element(tls_locally_signed_cert.servers.*.cert_pem, count.index)}"
+    destination = "C:\\Hashicorp\\Consul\\me.crt"
+
+    connection {
+      type     = "winrm"
+      https    = false
+      insecure = true
+      user     = "${var.admin_username}"
+      password = "${var.admin_password}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
+      # host     = "${element(azurerm_public_ip.winmad-pip.*.fqdn, count.index)}"
+    }
+  }
+
+# tls ca cert
+  provisioner "file" {
+    content     = "${module.rootcertificate.ca_cert_pem}"
+    destination = "C:\\Hashicorp\\Consul\\01-me.crt"
+
+    connection {
+      type     = "winrm"
+      https    = false
+      insecure = true
+      user     = "${var.admin_username}"
+      password = "${var.admin_password}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
+    }
+  }
 }
- 
+
+resource "azurerm_virtual_machine_extension" "test" {
+  count                = "${var.servers}"
+  name                 = "webserver-${count.index}"
+  location             = "${azurerm_resource_group.windows-rg.location}"
+  resource_group_name  = "${azurerm_resource_group.windows-rg.name}"
+  virtual_machine_name = "${element(azurerm_virtual_machine.web_server.*.name, count.index)}"
+  publisher            = "Microsoft.Compute"
+  type                 = "CustomScriptExtension"
+  type_handler_version = "1.9"
+  depends_on           = ["azurerm_virtual_machine.web_server"]
+
+  settings = <<SETTINGS
+    {
+        "fileUris": ["https://raw.githubusercontent.com/nehrman/terraform-azure-windows/master/scripts/InstallHashicorp.ps1"],
+        "commandToExecute": "powershell -ExecutionPolicy Unrestricted -file InstallHashicorp.ps1"
+    }
+SETTINGS
+}
