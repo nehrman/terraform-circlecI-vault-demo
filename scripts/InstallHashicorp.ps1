@@ -4,13 +4,13 @@ Start-BitsTransfer -Source https://releases.hashicorp.com/consul/1.4.4+ent/consu
 
 Expand-Archive C:\Users\$env:username\Downloads\consul_1.4.4+ent_windows_amd64.zip -DestinationPath C:\Hashicorp\Consul\
 
-sc.exe create "Hashicorp Consul" binPath= "C:\Hashicorp\Consul\consul.exe agent -dev" start= auto
+# sc.exe create "Hashicorp Consul" binPath= "C:\Hashicorp\Consul\consul.exe agent -dev" start= auto
 
 sc.exe start "Hashicorp Consul" 
 
 Start-BitsTransfer -Source https://releases.hashicorp.com/nomad/0.9.0/nomad_0.9.0_windows_amd64.zip -Destination C:\Users\$env:username\Downloads\nomad_0.9.0_windows_amd64.zip
 Expand-Archive C:\Users\$env:username\Downloads\nomad_0.9.0_windows_amd64.zip -DestinationPath C:\Hashicorp\Nomad\
 
-sc.exe create "Hashicorp Nomad" binPath= "C:\Hashicorp\Nomad\nomad.exe agent -dev" start= auto
+# sc.exe create "Hashicorp Nomad" binPath= "C:\Hashicorp\Nomad\nomad.exe agent -dev" start= auto
 
-sc.exe start "Hashicorp Nomad"
+# sc.exe start "Hashicorp Nomad"
