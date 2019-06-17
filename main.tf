@@ -117,7 +117,7 @@ resource "azurerm_public_ip" "windows-pip" {
   location            = "${azurerm_resource_group.windows-rg.location}"
   resource_group_name = "${azurerm_resource_group.windows-rg.name}"
   allocation_method   = "Dynamic"
-  domain_name_label   = "${var.hostname}-${count.index}"
+  domain_name_label   = "${var.env}-${var.hostname}-${count.index}"
 }
 
 resource "azurerm_virtual_machine" "web_server" {
