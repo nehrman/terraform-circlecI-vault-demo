@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  Terraform-Init:
+  Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
         environment:
@@ -10,47 +10,20 @@ jobs:
       - run:
           name: Terraform Initialization
           command: terraform init -input=false -backend-config="token=$tfe_token"
-      - store_artifacts:
-          path: /root/project
-          destination: tfinit
-  Validate-Code:
-    docker:
-      - image: hashicorp/terraform:0.11.14
-    steps:
-      - checkout
       - run:
           name: Validate Terraform Code
           command: terraform validate
-  Terraform-Plan:
-    docker:
-      - image: hashicorp/terraform:0.11.14
-    steps: 
-      - checkout
       - run:
           name: Terraform Plan
           command: |
-              terraform plan -out=tfplan -input=false
-
-  Terraform-Apply:
-    docker:
-      - image: hashicorp/terraform:0.11.14
-    steps: 
-      - checkout
+              terraform plan -input=false
       - run:
           name: Terraform Apply
-          command: terraform apply
+          command: terraform apply 
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-    - Terraform-Init
-    - Validate-Code:
-        requires:
-        - Terraform-Init
-    - Terraform-Plan:
-        requires:
-        - Validate-Code
-    - Terraform-Apply:
-        requires:
-        - Terraform-Plan 
+    - Terraform-Provisioning
+
      
