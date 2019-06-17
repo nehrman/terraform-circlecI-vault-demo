@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run:
           name: Terraform Initialization
-          command: terrafom init
+          command: terraform init
   Validate-Code:
     docker:
       - image: hashicorp/terraform:0.11.14
@@ -37,7 +37,7 @@ workflows:
   build-and-deploy:
     jobs:
     - Terraform-Init
-    - TValidate-Code:
+    - Validate-Code:
         requires:
         - Terraform-Init
     - Terraform-Plan:
