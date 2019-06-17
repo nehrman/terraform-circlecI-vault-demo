@@ -19,7 +19,7 @@ jobs:
               terraform plan -input=false
       - run:
           name: Terraform Apply
-          command: terraform apply 
+          command: terraform apply -input=false -auto-approve
 workflows:
   version: 2
   build-and-deploy:
