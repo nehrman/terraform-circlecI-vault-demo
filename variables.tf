@@ -100,6 +100,3 @@ variable "workers" {
   default = 2
 }
 
-variable "tfe_token" {
-  description = "Token used to connect to TFE Api"
-}
