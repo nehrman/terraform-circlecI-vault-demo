@@ -99,3 +99,7 @@ variable "workers" {
   description = "Number of workers to deploy"
   default = 2
 }
+
+variable "tfe_token" {
+  description = "Token used to connect to TFE Api"
+}
