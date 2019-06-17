@@ -1,4 +1,9 @@
 
+write-host "Configuring Firewall Rules for Consul and Nomad"
+
+New-NetFirewallRule -Name -DisplayName "Consult TCP ports (8000-9000)"  
+
+
 Import-Module BitsTransfer
 Start-BitsTransfer -Source https://releases.hashicorp.com/consul/1.4.4+ent/consul_1.4.4+ent_windows_amd64.zip -Destination C:\Users\guyser\Downloads\consul_1.4.4+ent_windows_amd64.zip
 

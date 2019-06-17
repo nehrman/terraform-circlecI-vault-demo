@@ -205,7 +205,7 @@ resource "azurerm_virtual_machine" "web_server" {
 
     connection {
       type     = "winrm"
-      timeout  = "10m"
+      timeout  = "20m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
@@ -220,7 +220,7 @@ resource "azurerm_virtual_machine" "web_server" {
 
     connection {
       type     = "winrm"
-      timeout  = "10m"
+      timeout  = "20m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
@@ -236,6 +236,7 @@ resource "azurerm_virtual_machine" "web_server" {
 
     connection {
       type     = "winrm"
+      timeout  = "20m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
@@ -252,6 +253,7 @@ resource "azurerm_virtual_machine" "web_server" {
 
     connection {
       type     = "winrm"
+      timeout  = "20m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
@@ -268,6 +270,7 @@ resource "azurerm_virtual_machine" "web_server" {
 
     connection {
       type     = "winrm"
+      timeout  = "20m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
