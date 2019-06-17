@@ -26,7 +26,7 @@ jobs:
       - run:
           name: Terraform Plan
           command: |
-              terrafom plan -out=tfplan -input=false
+              terraform plan -out=tfplan -input=false
 
   Terraform-Apply:
     docker:
@@ -35,7 +35,7 @@ jobs:
       - checkout
       - run:
           name: Terraform Apply
-          command: terrafom apply
+          command: terraform apply
 workflows:
   version: 2
   build-and-deploy:
@@ -46,7 +46,7 @@ workflows:
         - Terraform-Init
     - Terraform-Plan:
         requires:
-        - Terraform-Init
+        - Validate-Code
     - Terraform-Apply:
         requires:
         - Terraform-Plan 
