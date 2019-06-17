@@ -3,6 +3,8 @@ jobs:
   Terraform-Init:
     docker:
       - image: hashicorp/terraform:0.11.14
+        environment:
+            TF_WORKSPACE: $tfe_workspace
     steps: 
       - checkout
       - run:
