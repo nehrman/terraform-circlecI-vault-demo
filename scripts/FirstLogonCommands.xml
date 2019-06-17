@@ -66,8 +66,8 @@
     </SynchronousCommand>
     <SynchronousCommand>
         <CommandLine>%SystemRoot%\System32\reg.exe ADD HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ /v HideFileExt /t REG_DWORD /d 0 /f</CommandLine>
-        <Order>14</Order>
         <Description>Show file extensions in Explorer</Description>
+        <Order>14</Order>
     </SynchronousCommand>
     <SynchronousCommand>
         <CommandLine>cmd.exe /c net start winrm</CommandLine>

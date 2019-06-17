@@ -1,10 +1,10 @@
 version: 2
 jobs:
-  Terraform-Provisioning:
+  Dev-Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
         environment:
-            TF_WORKSPACE: "prod"
+            TF_WORKSPACE: "dev"
     steps: 
       - checkout
       - run:
@@ -20,10 +20,37 @@ jobs:
       - run:
           name: Terraform Apply
           command: terraform apply -input=false -auto-approve
+    Prod-Terraform-Provisioning:
+      docker:
+        - image: hashicorp/terraform:0.11.14
+          environment:
+            TF_WORKSPACE: "prod"
+      steps: 
+        - checkout
+        - run:
+            name: Terraform Initialization
+            command: terraform init -input=false -backend-config="token=$tfe_token"
+        - run:
+            name: Validate Terraform Code
+            command: terraform validate
+        - run:
+            name: Terraform Plan
+            command: |
+              terraform plan -input=false
+        - run:
+            name: Terraform Apply
+            command: terraform apply -input=false -auto-approve
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-    - Terraform-Provisioning
+    - Dev-Terraform-Provisioning
+    - Approve-Dev-To-Prod:
+        type: approval
+        requires: 
+          - Dev-Terraform-Provisioning
+    - Prod-Terraform-Provisioning:
+        requires: 
+          - Approve-Dev-To-Prod
 
      

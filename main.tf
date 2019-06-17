@@ -53,7 +53,6 @@ resource "azurerm_network_security_group" "windows-sg" {
     destination_address_prefix = "*"
   }
 
-
   security_rule {
     name                       = "rdp"
     priority                   = 104
@@ -121,13 +120,25 @@ resource "azurerm_public_ip" "windows-pip" {
   domain_name_label   = "${var.hostname}-${count.index}"
 }
 
+resource "azurerm_availability_set" "web_server" {
+  count                        = "${var.availabilityset == "true" ? 1 : 0}"
+  name                         = "${var.demo_prefix}-webserver-avset"
+  location                     = "${azurerm_resource_group.windows-rg.location}"
+  resource_group_name          = "${azurerm_resource_group.windows-rg.name}"
+  platform_fault_domain_count  = 2
+  platform_update_domain_count = 2
+  managed                      = true
+}
+
 resource "azurerm_virtual_machine" "web_server" {
   count                 = "${var.servers}"
   name                  = "${var.hostname}-${count.index}"
   location              = "${azurerm_resource_group.windows-rg.location}"
   resource_group_name   = "${azurerm_resource_group.windows-rg.name}"
   network_interface_ids = []
+  zones                 = "${var.zones}"
   vm_size               = "Standard_D2s_v3"
+  availability_set_id   = "${azurerm_availability_set.web_server.id}"
 
   network_interface_ids         = ["${element(azurerm_network_interface.windows-nic.*.id, count.index)}"]
   delete_os_disk_on_termination = "true"
@@ -194,7 +205,7 @@ resource "azurerm_virtual_machine" "web_server" {
       insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${element(azurerm_public_ip.winmad-pip.*.ip_address, count.index)}"
+      host     = "${element(azurerm_public_ip.winmad-pip.*.fqdn, count.index)}"
     }
   }
   */
@@ -205,30 +216,28 @@ resource "azurerm_virtual_machine" "web_server" {
 
     connection {
       type     = "winrm"
-      timeout  = "20m"
+      timeout  = "10m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.fqdn, count.index)}"
     }
   }
-
   provisioner "file" {
     content     = "${data.template_file.nomadconfig.rendered}"
     destination = "C:\\Hashicorp\\Nomad\\config.json"
 
     connection {
       type     = "winrm"
-      timeout  = "20m"
+      timeout  = "10m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.fqdn, count.index)}"
     }
   }
-
   # tls key
   provisioner "file" {
     content     = "${element(tls_private_key.servers.*.private_key_pem, count.index)}"
@@ -236,46 +245,43 @@ resource "azurerm_virtual_machine" "web_server" {
 
     connection {
       type     = "winrm"
-      timeout  = "20m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.fqdn, count.index)}"
+
       # host     = "${element(azurerm_public_ip.winmad-pip.*.fqdn, count.index)}"
     }
   }
-
-# tls crt
+  # tls crt
   provisioner "file" {
     content     = "${element(tls_locally_signed_cert.servers.*.cert_pem, count.index)}"
     destination = "C:\\Hashicorp\\Consul\\me.crt"
 
     connection {
       type     = "winrm"
-      timeout  = "20m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.fqdn, count.index)}"
+
       # host     = "${element(azurerm_public_ip.winmad-pip.*.fqdn, count.index)}"
     }
   }
-
-# tls ca cert
+  # tls ca cert
   provisioner "file" {
     content     = "${module.rootcertificate.ca_cert_pem}"
     destination = "C:\\Hashicorp\\Consul\\01-me.crt"
 
     connection {
       type     = "winrm"
-      timeout  = "20m"
       https    = false
       insecure = true
       user     = "${var.admin_username}"
       password = "${var.admin_password}"
-      host     = "${element(azurerm_public_ip.windows-pip.*.ip_address, count.index)}"
+      host     = "${element(azurerm_public_ip.windows-pip.*.fqdn, count.index)}"
     }
   }
 }

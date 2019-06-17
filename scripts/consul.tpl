@@ -14,7 +14,7 @@
   "disable_update_check": true,
   "leave_on_terminate": true,
   "raft_protocol": 3,
-  "retry_join": ["provider=azure tag_name=demostack"],
+  "retry_join": ["provider=azure tag_name=demostack  tag_value=demostack-bb4cbc8                   bab1cefe531097c09481b798d tenant_id=0e3e2e88-8caf-41ca-b4da-e3b33b6c52ec client_                   id=3b0bf866-d5c3-4134-976b-615dd6b8d4a5 subscription_id=8708baf2-0a54-4bb4-905b-                   78d21ac150da secret_access_key=61682315-a5a6-4b6e-a31f-98bde6d07e9c "],
 
   "server": true,
   "addresses": {

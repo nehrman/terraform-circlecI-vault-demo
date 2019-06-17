@@ -92,11 +92,21 @@ variable "admin_password" {
 
 variable "servers" {
   description = "Number of servers to deploy"
-  default = 2
+  default     = 2
 }
 
 variable "workers" {
   description = "Number of workers to deploy"
-  default = 2
+  default     = 2
 }
 
+variable "zones" {
+  description = "Which zones to deploy VMs"
+  type        = "list"
+  default     = []
+}
+
+variable "availabilityset" {
+  description = "Use an Availibilty Set or not"
+  default     = true
+}
