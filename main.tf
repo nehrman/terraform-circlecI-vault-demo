@@ -18,26 +18,26 @@ data "template_file" "nomadconfig" {
 }
 
 resource "azurerm_resource_group" "windows-rg" {
-  name     = "${var.resource_group}"
+  name     = "${var.env}-${var.resource_group}"
   location = "${var.location}"
 }
 
 resource "azurerm_virtual_network" "windows-vnet" {
-  name                = "${var.virtual_network_name}"
+  name                = "${var.env}-${var.virtual_network_name}"
   location            = "${azurerm_resource_group.windows-rg.location}"
   address_space       = ["${var.address_space}"]
   resource_group_name = "${azurerm_resource_group.windows-rg.name}"
 }
 
 resource "azurerm_subnet" "windows-subnet" {
-  name                 = "${var.demo_prefix}subnet"
+  name                 = "${var.env}-${var.demo_prefix}subnet"
   virtual_network_name = "${azurerm_virtual_network.windows-vnet.name}"
   resource_group_name  = "${azurerm_resource_group.windows-rg.name}"
   address_prefix       = "${var.subnet_prefix}"
 }
 
 resource "azurerm_network_security_group" "windows-sg" {
-  name                = "${var.demo_prefix}-sg"
+  name                = "${var.env}-${var.demo_prefix}-sg"
   location            = "${azurerm_resource_group.windows-rg.location}"
   resource_group_name = "${azurerm_resource_group.windows-rg.name}"
 

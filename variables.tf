@@ -5,6 +5,11 @@
 # Terraform code. If you create a variable with no default, the user will be
 # prompted to enter it (or define it via config file or command line flags.)
 
+variable "env" {
+  description = "Environnement"
+  default     = "dev"
+}
+
 variable "resource_group" {
   description = "The name of your Azure Resource Group."
   default     = "Azure-Vault-Neh-Demo"
