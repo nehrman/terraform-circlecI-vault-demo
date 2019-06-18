@@ -71,8 +71,7 @@ jobs:
             }
             EOF
             export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/v1/auth/vault-circleci-auth-plugin/login" | jq -r '.auth.client_token')"
-            echo $VAULT_TOKEN
-            vault read azure_demo/creds/circle-tfe-contrib
+            vault read -format=json azure_demo/creds/circle-tfe-contrib
 Dev-Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
