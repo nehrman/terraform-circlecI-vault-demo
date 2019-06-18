@@ -111,7 +111,7 @@ jobs:
             TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_ws.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
               while IFS=',' read -r key value category hcl sensitive
               do
-              sed -e "s/my-workspace/${TF_WORKSPACE_ID}/" -e "s/my_key/$key/" -e "s/my_value/$value/" -e "s/my_category/$category/" -e "s/my_hcl/$hcl/" -e "s/my_sensitive/$sensitive/" < ./tfe_vars/variables_tmpl.json  > ./tfe_vars/variables.json
+              sed -e "s/my_workspace/${TF_WORKSPACE_ID}/" -e "s/my_key/$key/" -e "s/my_value/$value/" -e "s/my_category/$category/" -e "s/my_hcl/$hcl/" -e "s/my_sensitive/$sensitive/" < ./tfe_vars/variables_tmpl.json  > ./tfe_vars/variables.json
               cat ./tfe_vars/variables.json
               echo "Adding variable $key in category $category "
               upload_variable_result=$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./tfe_vars/variables.json" "${TF_HOSTNAME}/vars")
