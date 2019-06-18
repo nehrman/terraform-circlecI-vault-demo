@@ -29,8 +29,7 @@ jobs:
               EOF
               TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_ws.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
               echo "$TF_WORKSPACE_ID" >> $BASH_ENV
-              done
-              cat 
+            done 
   Dev-Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
