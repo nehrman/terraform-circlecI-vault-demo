@@ -2,7 +2,7 @@ version: 2
 jobs:
   Preparing_Terraform_enterprise_Environment:
     docker: 
-      - image: debian/jessie:latest
+      - image: debian/debian:8
         environment:
             TF_VERSION: "0.11.14"
             TF_PREFIX: "test-remote-backend-"
