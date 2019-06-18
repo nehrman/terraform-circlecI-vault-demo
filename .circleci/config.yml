@@ -61,7 +61,7 @@ jobs:
             ARM_CLIENT_ID: "$client_id"
             ARM_CLIENT_SECRET: "$client_secret"
             ARM_SUBSCRIPTION_ID: "$subscription_id"
-            ARM_TENANT_ID: "$enant_id"
+            ARM_TENANT_ID: "$tenant_id"
 
     steps: 
       - checkout
