@@ -72,7 +72,7 @@ jobs:
                 "data": {
                   "type":"vars",
                   "attributes": {
-                    "key":"ARM",
+                    "key":"ARM_CLIENT_ID",
                     "value":"toto",
                     "category":"env",
                     "hcl":false,
@@ -90,7 +90,7 @@ jobs:
                 "data": {
                   "type":"vars",
                   "attributes": {
-                    "key":"env",
+                    "key":"ARM_CLIENT_SECRET",
                     "value":"tata",
                     "category":"env",
                     "hcl":false,
@@ -108,7 +108,7 @@ jobs:
                 "data": {
                   "type":"vars",
                   "attributes": {
-                    "key":"env",
+                    "key":"ARM_SUBSCRIPTION_ID",
                     "value":"titi",
                     "category":"env",
                     "hcl":false,
@@ -126,7 +126,7 @@ jobs:
                 "data": {
                   "type":"vars",
                   "attributes": {
-                    "key":"env",
+                    "key":"ARM_TENANT_ID",
                     "value":"tutu",
                     "category":"env",
                     "hcl":false,
