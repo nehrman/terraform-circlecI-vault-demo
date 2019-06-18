@@ -5,8 +5,25 @@ jobs:
       - image: hashicorp/terraform:0.11.14
         environment:
             TF_WORKSPACE: "dev"
+            TF_VERSION: "0.11.14"
+            TF_PREFIX: "remote-backend-"
     steps: 
       - checkout
+      - run: 
+          name: Creating Terraform Enterprise Workspace 
+          command: |
+            tee payload.json <<EOF
+              {
+                "data": {
+                  "attributes": {
+                    "name": "$TF_PREFIX$TF_WORKSPACE",
+                    "terraform_version": "$TF_VERSION"
+                  },
+                  "type": "workspace"
+                }
+              }
+              EOF
+            cat payload.json
       - run:
           name: Terraform Initialization
           command: terraform init -input=false -backend-config="token=$tfe_token"
