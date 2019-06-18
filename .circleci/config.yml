@@ -5,7 +5,7 @@ jobs:
       - image: debian:jessie
         environment:
             TF_VERSION: "0.11.14"
-            TF_PREFIX: "test-remote-backend-"
+            TF_PREFIX: "remote-backend-"
             TF_HOSTNAME: "https://app.terraform.io/api/v2"
             TF_ORGANIZATION: "Hashicorp-neh-Demo"
             TF_ENV: "dev prod"
