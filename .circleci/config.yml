@@ -32,6 +32,7 @@ jobs:
       - run:
           name: Adding Variables to Terraform Workspace
           command: |
+            cat $BASH_ENV
             tee payload_vars.json <<EOF
               {
                 "data": {
@@ -46,7 +47,7 @@ jobs:
                   "relationships": {
                     "workspace": {
                       "data": {
-                        "id":"$TF_WORKSPACE_ID",
+                        "id":"${TF_WORKSPACE_ID}",
                         "type":"workspaces"
                       }
                     }
