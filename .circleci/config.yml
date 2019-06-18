@@ -106,7 +106,7 @@ workflows:
           type: approval
           requires: 
             - Preparing_Terraform_enterprise_Environment
-      - Dev-Terraform-Provisioning
+      - Dev-Terraform-Provisioning:
           requires:
             - Approve-Prep-To-Dev
       - Approve-Dev-To-Prod:
