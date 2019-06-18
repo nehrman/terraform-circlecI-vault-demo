@@ -46,7 +46,7 @@ jobs:
             key,value,category,hcl,sensitive
             ARM_CLIENT_ID,$ARM_CLIENT_ID,env,false,false
             ARM_CLIENT_SECRET,$ARM_CLIENT_SECRET,env,false,true
-            ARM_SUBSCRIPTION_ID,$ARM_SUBSCRIPTION_TENANT_ID,env,false,false
+            ARM_SUBSCRIPTION_ID,$ARM_SUBSCRIPTION_ID,env,false,false
             ARM_TENANT_ID,$ARM_TENANT_ID,env,false,false
             env,$env,terraform,false,false
             EOF
@@ -112,9 +112,9 @@ jobs:
             TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_ws.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
               while IFS=',' read -r key value category hcl sensitive
               do
-              sed -e "s/my-organization/$organization/" -e "s/my-workspace/$workspace/" -e "s/my-key/$key/" -e "s/my-value/$value/" -e "s/my-category/$category/" -e "s/my-hcl/$hcl/" -e "s/my-sensitive/$sensitive/" < ./tfe_vars/variables_tmpl.json  > ./tfe_vars/variable.json
+              sed -e "s/my-organization/$organization/" -e "s/my-workspace/$workspace/" -e "s/my-key/$key/" -e "s/my-value/$value/" -e "s/my-category/$category/" -e "s/my-hcl/$hcl/" -e "s/my-sensitive/$sensitive/" < ./tfe_vars/variables_tmpl.json  > ./tfe_vars/variables.json
               echo "Adding variable $key in category $category "
-              upload_variable_result=$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_vars.json" "${TF_HOSTNAME}/vars")
+              upload_variable_result=$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./tfe_vars/variables.json" "${TF_HOSTNAME}/vars")
               done < ./tfe_vars/variables_$env.csv
             done 
 Dev-Terraform-Provisioning:
