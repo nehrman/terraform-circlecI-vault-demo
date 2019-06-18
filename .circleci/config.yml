@@ -25,7 +25,7 @@ jobs:
                   "type": "workspaces"
                 }
               }
-              EOF
+            EOF
             TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
             echo $TF_WORKSPÄCE_ID
       - run:
