@@ -1,5 +1,25 @@
 version: 2
 jobs:
+  Requesting_Azure_credentials_From_vault:
+    docker:
+      - image: vault:1.1.2
+        environment:
+          VAULT_ADDR: http://82.64.24.225:8200
+    steps:
+      - run:
+          name: Login to Vault and register token 
+          command: |
+            apk add jq curl
+            tee payload.json <<EOF
+            {
+              "project": "$CIRCLE_PROJECT_REPONAME",
+              "vcs_revision": "$CIRCLE_SHA1",
+              "build_num": "$CIRCLE_BUILD_NUM"
+            }
+            EOF
+            export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/v1/auth/vault-circleci-auth-plugin/login" | jq -r '.auth.client_token')"
+            mkdir azurecreds
+            vault read -format=json azure_demo/creds/circle-tfe-contrib | jq -r '.data[]' >> ./azurecreds/creds.txt
   Preparing_Terraform_enterprise_Environment:
     docker: 
       - image: debian:jessie
@@ -48,32 +68,83 @@ jobs:
                       }
                     }
                   }
-                }
+                },
+                "data": {
+                  "type":"vars",
+                  "attributes": {
+                    "key":"ARM",
+                    "value":"toto",
+                    "category":"env",
+                    "hcl":false,
+                    "sensitive":false
+                  },
+                  "relationships": {
+                    "workspace": {
+                      "data": {
+                        "id":"${TF_WORKSPACE_ID}",
+                        "type":"workspaces"
+                      }
+                    }
+                  }
+                },
+                                "data": {
+                  "type":"vars",
+                  "attributes": {
+                    "key":"env",
+                    "value":"tata",
+                    "category":"env",
+                    "hcl":false,
+                    "sensitive":false
+                  },
+                  "relationships": {
+                    "workspace": {
+                      "data": {
+                        "id":"${TF_WORKSPACE_ID}",
+                        "type":"workspaces"
+                      }
+                    }
+                  }
+                },
+                "data": {
+                  "type":"vars",
+                  "attributes": {
+                    "key":"env",
+                    "value":"titi",
+                    "category":"env",
+                    "hcl":false,
+                    "sensitive":false
+                  },
+                  "relationships": {
+                    "workspace": {
+                      "data": {
+                        "id":"${TF_WORKSPACE_ID}",
+                        "type":"workspaces"
+                      }
+                    }
+                  }
+                },
+                "data": {
+                  "type":"vars",
+                  "attributes": {
+                    "key":"env",
+                    "value":"tutu",
+                    "category":"env",
+                    "hcl":false,
+                    "sensitive":false
+                  },
+                  "relationships": {
+                    "workspace": {
+                      "data": {
+                        "id":"${TF_WORKSPACE_ID}",
+                        "type":"workspaces"
+                      }
+                    }
+                  }
+                },
               }
             EOF
             curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_vars.json" "${TF_HOSTNAME}/vars" 
             done 
-  Requesting_Azure_credentials_From_vault:
-    docker:
-      - image: vault:1.1.2
-        environment:
-          VAULT_ADDR: http://82.64.24.225:8200
-    steps:
-      - run:
-          name: Login to Vault and register token 
-          command: |
-            apk add jq curl
-            tee payload.json <<EOF
-            {
-              "project": "$CIRCLE_PROJECT_REPONAME",
-              "vcs_revision": "$CIRCLE_SHA1",
-              "build_num": "$CIRCLE_BUILD_NUM"
-            }
-            EOF
-            export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/v1/auth/vault-circleci-auth-plugin/login" | jq -r '.auth.client_token')"
-            mkdir azurecreds
-            vault read -format=json azure_demo/creds/circle-tfe-contrib | jq -r '.data[]' >> ./azurecreds/creds.txt
-            cat ./azurecreds/creds.txt
 Dev-Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
@@ -122,14 +193,14 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - Preparing_Terraform_enterprise_Environment
-      - Requesting_Azure_credentials_From_vault:
+      - Requesting_Azure_credentials_From_vault
+      - Preparing_Terraform_enterprise_Environment:
           requires:
-            - Preparing_Terraform_enterprise_Environment
+            - Requesting_Azure_credentials_From_vault
       - Approve-Vault-To-Dev:
           type: approval
           requires: 
-            - Requesting_Azure_credentials_From_vault
+            - Preparing_Terraform_enterprise_Environment
       - Dev-Terraform-Provisioning:
           requires:
             - Approve-Vault-To-Dev
