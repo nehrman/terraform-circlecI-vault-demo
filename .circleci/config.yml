@@ -57,7 +57,7 @@ jobs:
     docker:
       - image: vault:1.1.2
         environment:
-          VAULT_ADDR: http://82.64.24.225:8200/v1
+          VAULT_ADDR: http://82.64.24.225:8200
     steps:
       - run:
           name: Login to Vault and register token 
@@ -70,7 +70,7 @@ jobs:
               "build_num": "$CIRCLE_BUILD_NUM"
             }
             EOF
-            export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/auth/vault-circleci-auth-plugin/login" | jq -r '.auth.client_token')"
+            export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/v1/auth/vault-circleci-auth-plugin/login" | jq -r '.auth.client_token')"
             echo $VAULT_TOKEN
             vault read azure_demo/creds/circle-tfe-contrib
 Dev-Terraform-Provisioning:
