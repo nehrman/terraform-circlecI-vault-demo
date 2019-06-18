@@ -27,12 +27,11 @@ jobs:
               }
             EOF
             TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_ws.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
-            echo "TF_WORKSPACE_ID=$TF_WORKSPACE_ID" >> $BASH_ENV
-            cat $BASH_ENV
+            echo "$TF_WORKSPACE_ID" >> $BASH_ENV
       - run:
           name: Adding Variables to Terraform Workspace
           command: |
-            cat $BASH_ENV
+            TF_WORKSPACE_ID=$(cat $BASH_ENV)
             tee payload_vars.json <<EOF
               {
                 "data": {
