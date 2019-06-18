@@ -46,14 +46,14 @@ jobs:
             do
             tee ./tfe_vars/variables_$env.csv <<EOF
             key,value,category,hcl,sensitive
-            ARM_CLIENT_ID,$CLIENT_SECRET,env,false,false
+            ARM_CLIENT_ID,$CLIENT_ID,env,false,false
             ARM_CLIENT_SECRET,$CLIENT_SECRET,env,false,true
             ARM_SUBSCRIPTION_ID,$VAR_SUBSCRIPTION_TENANT_ID,env,false,false
             ARM_TENANT_ID,$VAR_ARM_TENANT_ID,env,false,false
             env,$env,terraform,false,false
             EOF
             done
-            cat variables_dev.csv
+            cat ./tfe_vars/variables_dev.csv
       - persist_to_workspace:
           root: /root/project
           paths: tfe_vars/
