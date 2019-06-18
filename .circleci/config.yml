@@ -13,6 +13,7 @@ jobs:
       - run: 
           name: Creating Terraform Enterprise Workspace 
           command: |
+            apt-get update
             apt-get install -y jq git curl 
             for env in $TF_ENV; do
               tee payload_ws.json <<EOF
