@@ -18,8 +18,11 @@ jobs:
             }
             EOF
             export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/v1/auth/vault-circleci-auth-plugin/login" | jq -r '.auth.client_token')"
-            mkdir azurecreds
+            mkdir ./azurecreds
             vault read -format=json azure_demo/creds/circle-tfe-contrib | jq -r '.data[]' >> ./azurecreds/creds.txt
+      - persist_to_workspace:
+          root: /root/project
+          paths: azurecreds/
   Preparing_Terraform_enterprise_Environment:
     docker: 
       - image: debian:jessie
@@ -30,11 +33,14 @@ jobs:
             TF_ORGANIZATION: "Hashicorp-neh-Demo"
             TF_ENV: "dev prod"
     steps: 
+      - attach_workspace:
+          at: /root/project
       - run: 
           name: Creating Terraform Enterprise Workspace 
           command: |
             apt-get update
             apt-get install -y jq git curl 
+            cat ./azurecreds/creds.txt
             for env in ${TF_ENV[@]}
             do
             tee payload_ws.json <<EOF
