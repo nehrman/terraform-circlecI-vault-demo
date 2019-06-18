@@ -8,7 +8,7 @@ jobs:
             TF_PREFIX: "test-remote-backend-"
             TF_HOSTNAME: "https://app.terraform.io/api/v2"
             TF_ORGANIZATION: "Hashicorp-neh-Demo"
-            TF_ENV: '("dev" "prod")'
+            TF_ENV: "dev prod"
     steps: 
       - run: 
           name: Creating Terraform Enterprise Workspace 
