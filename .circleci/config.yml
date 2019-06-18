@@ -15,7 +15,7 @@ jobs:
           name: Creating Terraform Enterprise Workspace 
           command: |
             apk add jq
-            tee payload.json <<EOF
+            tee payload_ws.json <<EOF
               {
                 "data": {
                   "attributes": {
@@ -26,8 +26,34 @@ jobs:
                 }
               }
             EOF
-            TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
-            echo $TF_WORKSPACE_ID
+            TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_ws.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
+            echo "TF_WORKSPACE_ID=$TF_WORKSPACE_ID" >> $BASH_ENV
+      - run:
+          name: Adding Variables to Terraform Workspace
+          command: |
+            tee payload_vars.json <<EOF
+              {
+                "data": {
+                  "type":"vars",
+                  "attributes": {
+                    "key":"env",
+                    "value":"dev",
+                    "category":"terraform",
+                    "hcl":false,
+                    "sensitive":false
+                  },
+                  "relationships": {
+                    "workspace": {
+                      "data": {
+                        "id":"$TF_WORKSPACE_ID",
+                        "type":"workspaces"
+                      }
+                    }
+                  }
+                }
+              }
+            EOF
+            curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_vars.json" "${TF_HOSTNAME}/vars"  
       - run:
           name: Terraform Initialization
           command: terraform init -input=false -backend-config="token=$tfe_token"
