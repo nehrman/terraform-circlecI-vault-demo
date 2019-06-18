@@ -62,6 +62,7 @@ jobs:
       - run:
           name: Login to Vault and register token 
           command: |
+            apk add jq curl
             tee payload.json <<EOF
             {
               "project": "$CIRCLE_PROJECT_REPONAME",
