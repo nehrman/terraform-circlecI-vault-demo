@@ -8,27 +8,28 @@ jobs:
             TF_PREFIX: "test-remote-backend-"
             TF_HOSTNAME: "https://app.terraform.io/api/v2"
             TF_ORGANIZATION: "Hashicorp-neh-Demo"
-            TF_ENV: "dev prod"
+            TF_ENV: ("dev" "prod")
     steps: 
       - run: 
           name: Creating Terraform Enterprise Workspace 
           command: |
             apt-get update
             apt-get install -y jq git curl 
-            for env in $TF_ENV; do
-              tee payload_ws.json <<EOF
-                {
-                  "data": {
-                    "attributes": {
-                      "name": "$TF_PREFIX$env",
-                      "terraform_version": "$TF_VERSION"
-                    },
-                    "type": "workspaces"
-                  }
+            for env in ${TF_ENV[@]}
+            do
+            tee payload_ws.json <<EOF
+              {
+                "data": {
+                  "attributes": {
+                    "name": "$TF_PREFIX$env",
+                    "terraform_version": "$TF_VERSION"
+                  },
+                  "type": "workspaces"
                 }
-              EOF
-              TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_ws.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
-              echo "$TF_WORKSPACE_ID" >> $BASH_ENV
+              }
+            EOF
+            TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_ws.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
+            echo "$TF_WORKSPACE_ID" >> $BASH_ENV
             done 
   Dev-Terraform-Provisioning:
     docker:
