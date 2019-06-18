@@ -14,6 +14,7 @@ jobs:
       - run: 
           name: Creating Terraform Enterprise Workspace 
           command: |
+            apk add jq
             tee payload.json <<EOF
               {
                 "data": {
