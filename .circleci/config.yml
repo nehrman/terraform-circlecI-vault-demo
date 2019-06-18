@@ -55,7 +55,7 @@ jobs:
             done 
   Requesting_Azure_credentials_From_vault:
     docker:
-      - image: hashicorp/vault:1.1.2
+      - image: vault:1.1.2
         environment:
           VAULT_ADDR: http://82.64.24.225:8200/v1
     steps:
