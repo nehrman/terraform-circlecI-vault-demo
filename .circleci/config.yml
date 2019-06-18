@@ -55,22 +55,22 @@ jobs:
             done 
   Requesting_Azure_credentials_From_vault:
     docker:
-      - image: hashicorp/vault:1.
+      - image: hashicorp/vault:1.1.2
         environment:
           VAULT_ADDR: http://82.64.24.225:8200/v1
     steps:
       - run:
-        name: Login to Vault and register token 
-        command: |
-          tee payload.json <<EOF
-          {
-            "project": "$CIRCLE_PROJECT_REPONAME",
-            "vcs_revision": "$CIRCLE_SHA1",
-            "build_num": "$CIRCLE_BUILD_NUM"
-          }
-          EOF
-          VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/auth/circleci-auth-plugin/login" | jq -r '.auth.client_token')"
-          vault read azure_demo/creds/circle-tfe-contrib
+          name: Login to Vault and register token 
+          command: |
+            tee payload.json <<EOF
+            {
+              "project": "$CIRCLE_PROJECT_REPONAME",
+              "vcs_revision": "$CIRCLE_SHA1",
+              "build_num": "$CIRCLE_BUILD_NUM"
+            }
+            EOF
+            VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/auth/circleci-auth-plugin/login" | jq -r '.auth.client_token')"
+            vault read azure_demo/creds/circle-tfe-contrib
 Dev-Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
