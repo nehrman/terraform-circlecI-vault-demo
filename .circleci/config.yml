@@ -23,6 +23,40 @@ jobs:
       - persist_to_workspace:
           root: /root/project
           paths: azurecreds/
+  Generating_variables_file_needed_for_Terraform_Enterprise:
+    docker:
+      - image: debian:jessie
+        environment: 
+          TF_ENV: "dev prod"
+    steps:
+      - run:
+          name: Installing Packages needed
+          command: |
+            apt-get update
+            apt-get install -y jq git curl ca-certificates
+      - attach_workspace:
+          at: /root/project
+      - run:
+          name: Generate CSV File needed for TFE Workspace
+          command: |
+            CLIENT_SECRET=$(awk "NR == 2" ./azurecreds/creds.txt)
+            CLIENT_ID=$(awk "NR == 1" ./azurecreds/creds.txt)
+            mkdir tfe_vars
+            for env in ${TF_ENV[@]}
+            do
+            tee ./tfe_vars/variables_$env.csv <<EOF
+            key,value,category,hcl,sensitive
+            ARM_CLIENT_ID,$CLIENT_SECRET,env,false,false
+            ARM_CLIENT_SECRET,$CLIENT_SECRET,env,false,true
+            ARM_SUBSCRIPTION_ID,$VAR_SUBSCRIPTION_TENANT_ID,env,false,false
+            ARM_TENANT_ID,$VAR_ARM_TENANT_ID,env,false,false
+            env,$env,terraform,false,false
+            EOF
+            done
+            cat variables_dev.csv
+      - persist_to_workspace:
+          root: /root/project
+          paths: tfe_vars/
   Preparing_Terraform_enterprise_Environment:
     docker: 
       - image: debian:jessie
@@ -77,79 +111,7 @@ jobs:
                       }
                     }
                   }
-                },
-                "data": {
-                  "type":"vars",
-                  "attributes": {
-                    "key":"ARM_CLIENT_ID",
-                    "value":"toto",
-                    "category":"env",
-                    "hcl":false,
-                    "sensitive":false
-                  },
-                  "relationships": {
-                    "workspace": {
-                      "data": {
-                        "id":"${TF_WORKSPACE_ID}",
-                        "type":"workspaces"
-                      }
-                    }
-                  }
-                },
-                "data": {
-                  "type":"vars",
-                  "attributes": {
-                    "key":"ARM_CLIENT_SECRET",
-                    "value":"tata",
-                    "category":"env",
-                    "hcl":false,
-                    "sensitive":false
-                  },
-                  "relationships": {
-                    "workspace": {
-                      "data": {
-                        "id":"${TF_WORKSPACE_ID}",
-                        "type":"workspaces"
-                      }
-                    }
-                  }
-                },
-                "data": {
-                  "type":"vars",
-                  "attributes": {
-                    "key":"ARM_SUBSCRIPTION_ID",
-                    "value":"titi",
-                    "category":"env",
-                    "hcl":false,
-                    "sensitive":false
-                  },
-                  "relationships": {
-                    "workspace": {
-                      "data": {
-                        "id":"${TF_WORKSPACE_ID}",
-                        "type":"workspaces"
-                      }
-                    }
-                  }
-                },
-                "data": {
-                  "type":"vars",
-                  "attributes": {
-                    "key":"ARM_TENANT_ID",
-                    "value":"tutu",
-                    "category":"env",
-                    "hcl":false,
-                    "sensitive":false
-                  },
-                  "relationships": {
-                    "workspace": {
-                      "data": {
-                        "id":"${TF_WORKSPACE_ID}",
-                        "type":"workspaces"
-                      }
-                    }
-                  }
-                }
+                } 
               }
             EOF
             curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_vars.json" "${TF_HOSTNAME}/vars" 
@@ -203,9 +165,12 @@ workflows:
   build-and-deploy:
     jobs:
       - Requesting_Azure_credentials_From_vault
+      - Generating_variables_file_needed_for_Terraform_Enterprise:
+          requires: 
+            - Requesting_Azure_credentials_From_vault
       - Preparing_Terraform_enterprise_Environment:
           requires:
-            - Requesting_Azure_credentials_From_vault
+            - Generating_variables_file_needed_for_Terraform_Enterprise
       - Approve-Vault-To-Dev:
           type: approval
           requires: 
