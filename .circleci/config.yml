@@ -70,7 +70,7 @@ jobs:
               "build_num": "$CIRCLE_BUILD_NUM"
             }
             EOF
-            VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/auth/circleci-auth-plugin/login" | jq -r '.auth.client_token')"
+            export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/auth/circleci-auth-plugin/login" | jq -r '.auth.client_token')"
             vault read azure_demo/creds/circle-tfe-contrib
 Dev-Terraform-Provisioning:
     docker:
