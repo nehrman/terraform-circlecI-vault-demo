@@ -53,7 +53,25 @@ jobs:
             EOF
             curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_vars.json" "${TF_HOSTNAME}/vars" 
             done 
-  Dev-Terraform-Provisioning:
+  Requesting_Azure_credentials_From_vault:
+    docker:
+      - image: hashicorp/vault:1.
+        environment:
+          VAULT_ADDR: http://82.64.24.225:8200/v1
+    steps:
+      - run:
+        name: Login to Vault and register token 
+        command: |
+          tee payload.json <<EOF
+          {
+            "project": "$CIRCLE_PROJECT_REPONAME",
+            "vcs_revision": "$CIRCLE_SHA1",
+            "build_num": "$CIRCLE_BUILD_NUM"
+          }
+          EOF
+          VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/auth/circleci-auth-plugin/login" | jq -r '.auth.client_token')"
+          vault read azure_demo/creds/circle-tfe-contrib
+Dev-Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
         environment:
@@ -69,15 +87,11 @@ jobs:
       - run:
           name: Terraform Plan
           command: |
-              export ARM_CLIENT_ID="$client_id"
-              export ARM_CLIENT_SECRET="$client_secret"
-              export ARM_SUBSCRIPTION_ID="$subscription_id"
-              export ARM_TENANT_ID="$tenant_id"
               terraform plan -input=false
       - run:
           name: Terraform Apply
           command: terraform apply -input=false -auto-approve
-  Prod-Terraform-Provisioning:
+Prod-Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
         environment:
@@ -106,10 +120,13 @@ workflows:
   build-and-deploy:
     jobs:
       - Preparing_Terraform_enterprise_Environment
-      - Approve-Prep-To-Dev:
+      - Requesting_Azure_credentials_From_vault:
+          requires:
+            - Preparing_Terraform_enterprise_Environment
+      - Approve-Vault-To-Dev:
           type: approval
           requires: 
-            - Preparing_Terraform_enterprise_Environment
+            - Requesting_Azure_credentials_From_vault
       - Dev-Terraform-Provisioning:
           requires:
             - Approve-Prep-To-Dev
