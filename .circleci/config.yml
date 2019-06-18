@@ -26,8 +26,6 @@ jobs:
   Generating_variables_file_needed_for_Terraform_Enterprise:
     docker:
       - image: debian:jessie
-        environment: 
-          TF_ENV: "dev prod"
     steps:
       - run:
           name: Installing Packages needed
@@ -39,21 +37,42 @@ jobs:
       - run:
           name: Generate CSV File needed for TFE Workspace
           command: |
-            CLIENT_SECRET=$(awk "NR == 2" ./azurecreds/creds.txt)
-            CLIENT_ID=$(awk "NR == 1" ./azurecreds/creds.txt)
+            ARM_CLIENT_SECRET=$(awk "NR == 2" ./azurecreds/creds.txt)
+            ARM_CLIENT_ID=$(awk "NR == 1" ./azurecreds/creds.txt)
             mkdir tfe_vars
             for env in ${TF_ENV[@]}
             do
             tee ./tfe_vars/variables_$env.csv <<EOF
             key,value,category,hcl,sensitive
-            ARM_CLIENT_ID,$CLIENT_ID,env,false,false
-            ARM_CLIENT_SECRET,$CLIENT_SECRET,env,false,true
-            ARM_SUBSCRIPTION_ID,$VAR_SUBSCRIPTION_TENANT_ID,env,false,false
-            ARM_TENANT_ID,$VAR_ARM_TENANT_ID,env,false,false
+            ARM_CLIENT_ID,$ARM_CLIENT_ID,env,false,false
+            ARM_CLIENT_SECRET,$ARM_CLIENT_SECRET,env,false,true
+            ARM_SUBSCRIPTION_ID,$ARM_SUBSCRIPTION_TENANT_ID,env,false,false
+            ARM_TENANT_ID,$ARM_TENANT_ID,env,false,false
             env,$env,terraform,false,false
             EOF
             done
-            cat ./tfe_vars/variables_dev.csv
+            tee ./tfe_vars/variables_tmpl.json <<EOF
+              {
+                "data": {
+                  "type":"vars",
+                  "attributes": {
+                    "key":"my_key",
+                    "value":"my_value",
+                    "category":"my_category",
+                    "hcl":my_hcl,
+                    "sensitive":my_sensitive
+                  },
+                  "relationships": {
+                    "workspace": {
+                      "data": {
+                        "id":"my_workspace",
+                        "type":"workspaces"
+                      }
+                    }
+                  }
+                } 
+              }
+            EOF
       - persist_to_workspace:
           root: /root/project
           paths: tfe_vars/
@@ -65,7 +84,6 @@ jobs:
             TF_PREFIX: "remote-backend-"
             TF_HOSTNAME: "https://app.terraform.io/api/v2"
             TF_ORGANIZATION: "Hashicorp-neh-Demo"
-            TF_ENV: "dev prod"
     steps:  
       - run:
           name: Installing Packages needed
@@ -92,29 +110,12 @@ jobs:
               }
             EOF
             TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_ws.json" "${TF_HOSTNAME}/organizations/${TF_ORGANIZATION}/workspaces" | jq -r '.data.id')"
-            tee payload_vars.json <<EOF
-              {
-                "data": {
-                  "type":"vars",
-                  "attributes": {
-                    "key":"env",
-                    "value":"$env",
-                    "category":"terraform",
-                    "hcl":false,
-                    "sensitive":false
-                  },
-                  "relationships": {
-                    "workspace": {
-                      "data": {
-                        "id":"${TF_WORKSPACE_ID}",
-                        "type":"workspaces"
-                      }
-                    }
-                  }
-                } 
-              }
-            EOF
-            curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_vars.json" "${TF_HOSTNAME}/vars" 
+              while IFS=',' read -r key value category hcl sensitive
+              do
+              sed -e "s/my-organization/$organization/" -e "s/my-workspace/$workspace/" -e "s/my-key/$key/" -e "s/my-value/$value/" -e "s/my-category/$category/" -e "s/my-hcl/$hcl/" -e "s/my-sensitive/$sensitive/" < ./tfe_vars/variables_tmpl.json  > ./tfe_vars/variable.json
+              echo "Adding variable $key in category $category "
+              upload_variable_result=$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload_vars.json" "${TF_HOSTNAME}/vars")
+              done < ./tfe_vars/variables_$env.csv
             done 
 Dev-Terraform-Provisioning:
     docker:
