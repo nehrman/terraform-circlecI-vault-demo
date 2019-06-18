@@ -7,6 +7,8 @@ jobs:
             TF_WORKSPACE: "dev"
             TF_VERSION: "0.11.14"
             TF_PREFIX: "remote-backend-"
+            TF_HOSTNAME: "https://app.terraform.io/api/v2"
+            TF_ORGANIZATION: "Hashicorp-neh-Demo"
     steps: 
       - checkout
       - run: 
@@ -23,7 +25,8 @@ jobs:
                 }
               }
               EOF
-            cat payload.json
+            TF_WORKSPACE_ID="$(curl -v --header "Authorization: Bearer ${tfe_token}" --header "Content-Type: application/vnd.api+json" -d "@./payload.json" "${TF_HOSTNAME}/${TF_ORGANIZATION}" | jq -r '.id')"
+            echo $TF_WORKSPÄCE_ID
       - run:
           name: Terraform Initialization
           command: terraform init -input=false -backend-config="token=$tfe_token"
