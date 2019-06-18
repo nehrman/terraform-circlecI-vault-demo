@@ -117,7 +117,7 @@ jobs:
               upload_variable_result=$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./tfe_vars/variables.json" "${TF_HOSTNAME}/vars")
               done < ./tfe_vars/variables_$env.csv
             done 
-Dev-Terraform-Provisioning:
+  Dev-Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
         environment:
@@ -137,15 +137,11 @@ Dev-Terraform-Provisioning:
       - run:
           name: Terraform Apply
           command: terraform apply -input=false -auto-approve
-Prod-Terraform-Provisioning:
+  Prod-Terraform-Provisioning:
     docker:
       - image: hashicorp/terraform:0.11.14
         environment:
           TF_WORKSPACE: "prod"
-          ARM_CLIENT_ID: "$client_id"
-          ARM_CLIENT_SECRET: "$client_secret"
-          ARM_SUBSCRIPTION_ID: "$subscription_id"
-          ARM_TENANT_ID: "$tenant_id"
     steps: 
       - checkout
       - run:
@@ -172,13 +168,9 @@ workflows:
       - Preparing_Terraform_enterprise_Environment:
           requires:
             - Generating_variables_file_needed_for_Terraform_Enterprise
-      - Approve-Vault-To-Dev:
-          type: approval
-          requires: 
-            - Preparing_Terraform_enterprise_Environment
       - Dev-Terraform-Provisioning:
           requires:
-            - Approve-Vault-To-Dev
+            - Preparing_Terraform_enterprise_Environment
       - Approve-Dev-To-Prod:
           type: approval
           requires: 
