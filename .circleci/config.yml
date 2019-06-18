@@ -25,7 +25,7 @@ jobs:
                 }
               }
               EOF
-            TF_WORKSPACE_ID="$(curl -v --header "Authorization: Bearer ${tfe_token}" --header "Content-Type: application/vnd.api+json" -d "@./payload.json" "${TF_HOSTNAME}/${TF_ORGANIZATION}" | jq -r '.id')"
+            TF_WORKSPACE_ID="$(curl -v -H "Authorization: Bearer ${tfe_token}" -H "Content-Type: application/vnd.api+json" -d "@./payload.json" "${TF_HOSTNAME}/${TF_ORGANIZATION}/workspaces" | jq -r '.id')"
             echo $TF_WORKSPÄCE_ID
       - run:
           name: Terraform Initialization
