@@ -22,7 +22,7 @@ jobs:
                     "name": "$TF_PREFIX$TF_WORKSPACE",
                     "terraform_version": "$TF_VERSION"
                   },
-                  "type": "workspace"
+                  "type": "workspaces"
                 }
               }
               EOF
