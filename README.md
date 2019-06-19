@@ -53,9 +53,9 @@ Here's what you'll need to recreate this demo environment in Azure:
     *To make things easier, create an account with your Github Account* :)
     Now, follow these steps :
     - Click on `+ Add Project`:  
-    <img width="100" alt="CircleCI Pipeline Screenshot" src="./images/CircleCI_add_project.png">
+    <img width="100" alt="CircleCI Pipeline Screenshot" src="./images/CircleCI_add_project.png">  
     - Select your project and click on `Set Up Project`:  
-    <img width="100" alt="CircleCI Pipeline Screenshot" src="./images/CircleCI_setup_project.png">
+    <img width="100" alt="CircleCI Pipeline Screenshot" src="./images/CircleCI_setup_project.png">  
     - Finally, configure the environment variables in your project:  
     <img width="600" alt="CircleCI Pipeline Screenshot" src="./images/CircleCI_envvar.png">
 
