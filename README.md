@@ -11,4 +11,4 @@ So, to summarize, that's the technologies and features that have been used :
 
 ## What it's look like in CircleCI 
 
-<img width="300" alt="CircleCI Pipeline Screenshot" src="hhttps://github.com/nehrman/terraform-azure-windows/blob/master/images/CircleCI_workflow.png"
+<img width="300" alt="CircleCI Pipeline Screenshot" src="https://github.com/nehrman/terraform-azure-windows/blob/master/images/CircleCI_workflow.png">
