@@ -9,7 +9,7 @@ So, to summarize, that's the technologies and features that have been used :
 - Terraform Enhanced Backend
 - Terraform Enterprise APIs
 
-<img width="600" alt="CircleCI Pipeline Screenshot" src="https://github.com/nehrman/terraform-azure-windows/blob/master/images/CircleCi_Hashi_demo.png">
+<img width="800" alt="CircleCI Pipeline Screenshot" src="https://github.com/nehrman/terraform-azure-windows/blob/master/images/CircleCi_Hashi_demo.png">
 
 ## What it's look like in CircleCI 
 
