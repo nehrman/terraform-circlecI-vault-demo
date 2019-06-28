@@ -64,6 +64,7 @@ Here's what you'll need to recreate this demo environment in Azure:
 ## Special thanks
 * **Marc Boudreau** - For his amazing work creating vault CircleCI Auth plugin [Github](https://github.com/marcboudreau)
 * **Joern Stenkamp** - For helping me figure out the TFE variables creation [Github](https://github.com/joestack)
+* **Guy Barros** - For working together on the windows VM on azure [Github](https://github.com/guybarros)
 
 ## Authors
 * **Nicolas Ehrman** - *Initial work* - [Hashicorp](https://www.hashicorp.com)
