@@ -97,7 +97,7 @@ variable "admin_password" {
 
 variable "servers" {
   description = "Number of servers to deploy"
-  default     = 2
+  default     = 3
 }
 
 variable "workers" {
