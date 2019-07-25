@@ -18,6 +18,7 @@ jobs:
             EOF
             export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/v1/auth/vault-circleci-auth-plugin/login" | jq -r '.auth.client_token')"
             mkdir ./azurecreds
+            echo $VAULT_TOKEN
             vault read -format=json azure_demo/creds/circle-tfe-contrib | jq -r '.data[]' >> ./azurecreds/creds.txt
       - persist_to_workspace:
           root: /root/project
