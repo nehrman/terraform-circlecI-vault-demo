@@ -8,6 +8,7 @@ jobs:
           name: Login to Vault and register token 
           command: |
             apk add jq curl
+            export VAULT_ADDR=${vault_addr}
             tee payload.json <<EOF
             {
               "project": "$CIRCLE_PROJECT_REPONAME",
@@ -15,7 +16,7 @@ jobs:
               "build_num": "$CIRCLE_BUILD_NUM"
             }
             EOF
-            export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${vault_addr}/v1/auth/vault-circleci-auth-plugin/login" | jq -r '.auth.client_token')"
+            export VAULT_TOKEN="$(curl -v -d "@./payload.json" "${VAULT_ADDR}/v1/auth/vault-circleci-auth-plugin/login" | jq -r '.auth.client_token')"
             mkdir ./azurecreds
             vault read -format=json azure_demo/creds/circle-tfe-contrib | jq -r '.data[]' >> ./azurecreds/creds.txt
       - persist_to_workspace:
