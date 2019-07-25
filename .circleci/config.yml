@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: vault:1.1.2
         environment:
-          VAULT_ADDR: ${vault_addr}
+          VAULT_ADDR: $vault_addr
     steps:
       - run:
           name: Login to Vault and register token 
