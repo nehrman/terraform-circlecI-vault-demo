@@ -102,7 +102,7 @@ variable "servers" {
 
 variable "workers" {
   description = "Number of workers to deploy"
-  default     = 2
+  default     = 3
 }
 
 variable "zones" {
