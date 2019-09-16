@@ -147,7 +147,7 @@ resource "azurerm_virtual_machine" "web_server" {
     managed_disk_type = "Standard_LRS"
   }
 
-  tags {
+  tags = {
     name  = "Nicolas Ehrman"
     ttl   = "13"
     owner = "nehrman@hashicorp.com"
@@ -163,7 +163,7 @@ resource "azurerm_virtual_machine" "web_server" {
     enable_automatic_upgrades = true //Here defined autoupdate config and also vm agent config
     provision_vm_agent        = true
 
-    winrm = {
+    winrm {
       protocol = "http" //Here defined WinRM connectivity config
     }
 
