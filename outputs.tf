@@ -38,12 +38,12 @@ output "subnet_address_prefix" {
 }
 
 output "vm_name" {
-  value = "${azurerm_virtual_machine[count.index].web_server.name}"
+  value = "${azurerm_virtual_machine[*].web_server.name}"
   description = "Name of Virtual Machines created by terraform"
 }
 
-output "vm_blic_ipu" {
-  value = "${azurerm_public_ip[count.index].windows-pip.ip_address}"
+output "vm_public_ip" {
+  value = "${azurerm_public_ip[*].windows-pip.ip_address}"
   description = "Public IP Addresses of Virtual Machines created by terraform"
 }
   
