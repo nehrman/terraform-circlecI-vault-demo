@@ -125,7 +125,7 @@ resource "azurerm_virtual_machine" "web_server" {
   name                  = "${var.hostname}-${count.index}"
   location              = "${azurerm_resource_group.windows-rg.location}"
   resource_group_name   = "${azurerm_resource_group.windows-rg.name}"
-  network_interface_ids = []
+#  network_interface_ids = []
   vm_size               = "Standard_D2s_v3"
 
   network_interface_ids         = ["${element(azurerm_network_interface.windows-nic.*.id, count.index)}"]
