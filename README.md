@@ -1,4 +1,4 @@
-# Terraform-CircleCI-Vault-Demo
+# Terraform-CircleCI-Vault-Demo 
 This demo illustrates how to migrate from a Terraform OSS workflow to Terraform Enterprise without difficulty. And because I like challenges, I decided to integrate CircleCI with Vault to request Azure dynamic credentials the pipeline is launched.
 
 Here are the technologies and features used in this demo:
